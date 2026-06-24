@@ -1,0 +1,301 @@
+### ============================================================
+### Chocolatería del Paraíso – API Tests (REST Client / IntelliJ)
+### Base URL: http://localhost:8080
+### ============================================================
+
+@baseUrl = http://localhost:8080
+
+### ────────────────────────────────────────────────────────────
+###  CATEGORÍAS
+### ────────────────────────────────────────────────────────────
+
+### [1] Listar categorías activas (paginado)
+GET {{baseUrl}}/api/categories?page=0&size=5&sort=name
+Accept: application/json
+
+###
+
+### [2] Listar categorías filtrando por nombre
+GET {{baseUrl}}/api/categories?name=Amargo&page=0&size=10
+Accept: application/json
+
+###
+
+### [3] Obtener categoría por ID
+GET {{baseUrl}}/api/categories/1
+Accept: application/json
+
+###
+
+### [4] Crear nueva categoría
+POST {{baseUrl}}/api/categories
+Content-Type: application/json
+
+{
+  "name": "Chocolates Artesanales",
+  "description": "Elaborados a mano por nuestros maestros chocolateros",
+  "active": true
+}
+
+###
+
+### [5] Actualizar categoría
+PUT {{baseUrl}}/api/categories/1
+Content-Type: application/json
+
+{
+  "name": "Chocolates Amargos Premium",
+  "description": "Selección especial de cacaos con 70% o más de pureza",
+  "active": true
+}
+
+###
+
+### [6] Eliminar categoría (soft delete)
+DELETE {{baseUrl}}/api/categories/6
+Accept: application/json
+
+###
+
+
+### ────────────────────────────────────────────────────────────
+###  CLIENTES
+### ────────────────────────────────────────────────────────────
+
+### [7] Listar clientes activos (paginado)
+GET {{baseUrl}}/api/customers?page=0&size=10&sort=lastName
+Accept: application/json
+
+###
+
+### [8] Buscar clientes por nombre/email
+GET {{baseUrl}}/api/customers?search=valentina&page=0&size=5
+Accept: application/json
+
+###
+
+### [9] Obtener cliente por ID
+GET {{baseUrl}}/api/customers/1
+Accept: application/json
+
+###
+
+### [10] Crear nuevo cliente
+POST {{baseUrl}}/api/customers
+Content-Type: application/json
+
+{
+  "firstName": "Florencia",
+  "lastName": "Peralta",
+  "email": "florencia.peralta@email.com",
+  "phone": "11-2233-4455",
+  "address": "Tucumán 890, Buenos Aires",
+  "active": true
+}
+
+###
+
+### [11] Actualizar cliente
+PUT {{baseUrl}}/api/customers/1
+Content-Type: application/json
+
+{
+  "firstName": "Valentina",
+  "lastName": "Rodríguez",
+  "email": "valentina.rodriguez@email.com",
+  "phone": "11-9999-0000",
+  "address": "Av. Callao 1500, CABA",
+  "active": true
+}
+
+###
+
+### [12] Eliminar cliente (soft delete)
+DELETE {{baseUrl}}/api/customers/5
+Accept: application/json
+
+###
+
+
+### ────────────────────────────────────────────────────────────
+###  PRODUCTOS (Chocolates)
+### ────────────────────────────────────────────────────────────
+
+### [13] Listar todos los chocolates activos (paginado)
+GET {{baseUrl}}/api/products?page=0&size=5&sort=name
+Accept: application/json
+
+###
+
+### [14] Filtrar por nombre
+GET {{baseUrl}}/api/products?name=Trufa&page=0&size=10
+Accept: application/json
+
+###
+
+### [15] Filtrar por categoría (Bombones y Trufas = id 4)
+GET {{baseUrl}}/api/products?categoryId=4&page=0&size=10
+Accept: application/json
+
+###
+
+### [16] Filtrar por nombre Y categoría
+GET {{baseUrl}}/api/products?name=Barra&categoryId=1&page=0&size=10
+Accept: application/json
+
+###
+
+### [17] Lista completa para selector (sin paginación)
+GET {{baseUrl}}/api/products/all-active
+Accept: application/json
+
+###
+
+### [18] Obtener producto por ID
+GET {{baseUrl}}/api/products/1
+Accept: application/json
+
+###
+
+### [19] Crear nuevo chocolate
+POST {{baseUrl}}/api/products
+Content-Type: application/json
+
+{
+  "name": "Trufa de Maracuyá con Chocolate Amargo",
+  "description": "Ganache tropical de maracuyá cubierto en chocolate oscuro 65%",
+  "price": 360.00,
+  "stock": 40,
+  "categoryId": 4,
+  "active": true
+}
+
+###
+
+### [20] Actualizar precio y stock de un chocolate
+PUT {{baseUrl}}/api/products/1
+Content-Type: application/json
+
+{
+  "name": "Trufa de Chocolate Amargo 70%",
+  "description": "Trufa artesanal de cacao venezolano 70%, con cobertura de polvo de cacao",
+  "price": 380.00,
+  "stock": 55,
+  "categoryId": 1,
+  "active": true
+}
+
+###
+
+### [21] Eliminar producto (soft delete)
+DELETE {{baseUrl}}/api/products/10
+Accept: application/json
+
+###
+
+
+### ────────────────────────────────────────────────────────────
+###  VENTAS / PEDIDOS
+### ────────────────────────────────────────────────────────────
+
+### [22] Listar todas las ventas (paginado, orden descendente por fecha)
+GET {{baseUrl}}/api/sales?page=0&size=10&sort=saleDate,desc
+Accept: application/json
+
+###
+
+### [23] Filtrar ventas CONFIRMADAS
+GET {{baseUrl}}/api/sales?status=CONFIRMED&page=0&size=10
+Accept: application/json
+
+###
+
+### [24] Filtrar ventas CANCELADAS
+GET {{baseUrl}}/api/sales?status=CANCELLED&page=0&size=10
+Accept: application/json
+
+###
+
+### [25] Obtener detalle de una venta
+GET {{baseUrl}}/api/sales/1
+Accept: application/json
+
+###
+
+### ─────────────────────────────────────────────────────────
+### [26] CHECKOUT – Venta con múltiples chocolates (CASO FELIZ)
+###
+###  Cliente: Valentina Rodríguez (id=1)
+###  Productos:
+###    - Trufa de Chocolate Amargo 70%   (id=1) x2  → $700.00
+###    - Bombón de Avellana              (id=3) x3  → $870.00
+###    - Barra Sin Azúcar 70%            (id=9) x1  → $390.00
+###  Total esperado: $1,960.00
+### ─────────────────────────────────────────────────────────
+POST {{baseUrl}}/api/sales/checkout
+Content-Type: application/json
+
+{
+  "customerId": 1,
+  "notes": "Embalaje especial para regalo. Sin azúcar adicional.",
+  "details": [
+    { "productId": 1, "quantity": 2 },
+    { "productId": 3, "quantity": 3 },
+    { "productId": 9, "quantity": 1 }
+  ]
+}
+
+###
+
+### ─────────────────────────────────────────────────────────
+### [27] CHECKOUT – Venta simple (Matías González, 1 item)
+### ─────────────────────────────────────────────────────────
+POST {{baseUrl}}/api/sales/checkout
+Content-Type: application/json
+
+{
+  "customerId": 2,
+  "notes": "Entrega en sucursal Rosario.",
+  "details": [
+    { "productId": 5, "quantity": 5 }
+  ]
+}
+
+###
+
+### ─────────────────────────────────────────────────────────
+### [28] CHECKOUT – Error: Stock insuficiente
+###  Se solicitan 999 unidades de Trufa (stock ≈ 50)
+###  Respuesta esperada: HTTP 409 Conflict con InsufficientStockException
+### ─────────────────────────────────────────────────────────
+POST {{baseUrl}}/api/sales/checkout
+Content-Type: application/json
+
+{
+  "customerId": 3,
+  "details": [
+    { "productId": 1, "quantity": 999 }
+  ]
+}
+
+###
+
+### ─────────────────────────────────────────────────────────
+### [29] CHECKOUT – Error: Validación (detalle vacío)
+###  Respuesta esperada: HTTP 400 Bad Request (validation error)
+### ─────────────────────────────────────────────────────────
+POST {{baseUrl}}/api/sales/checkout
+Content-Type: application/json
+
+{
+  "customerId": 1,
+  "details": []
+}
+
+###
+
+### [30] Cancelar venta (revierte stock)
+PATCH {{baseUrl}}/api/sales/1/cancel
+Accept: application/json
+
+###

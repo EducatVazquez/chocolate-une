@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout(~{::title}, ~{::main-content})}">
+<head><title>Chocolates</title></head>
+<body>
+<th:block th:fragment="main-content">
+<div class="p-8">
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-3xl font-bold text-choc-800">Chocolates</h1>
+            <p class="text-choc-500 mt-1" th:text="'Total: ' + ${pageData.totalElements} + ' productos'"></p>
+        </div>
+        <button onclick="openModal()"
+                class="px-5 py-2.5 bg-choc-600 text-white rounded-xl hover:bg-choc-700 transition-colors font-medium">
+            + Nuevo Producto
+        </button>
+    </div>
+
+    <!-- Filters -->
+    <form th:action="@{/products}" method="get" class="bg-white rounded-2xl shadow p-4 mb-6 flex gap-3 flex-wrap">
+        <input type="text" name="name" th:value="${search}" placeholder="Buscar por nombre..."
+               class="flex-1 min-w-48 border border-choc-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-choc-400 text-sm"/>
+        <select name="categoryId"
+                class="border border-choc-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-choc-400 text-sm bg-white text-choc-700">
+            <option value="">Todas las categorías</option>
+            <option th:each="cat : ${categories.content}"
+                    th:value="${cat.id}" th:text="${cat.name}"
+                    th:selected="${cat.id == categoryId}"></option>
+        </select>
+        <button type="submit" class="px-5 py-2 bg-choc-500 text-white rounded-lg hover:bg-choc-600 transition-colors text-sm font-medium">Filtrar</button>
+        <a th:href="@{/products}" class="px-5 py-2 bg-choc-100 text-choc-700 rounded-lg hover:bg-choc-200 transition-colors text-sm font-medium">Limpiar</a>
+    </form>
+
+    <!-- Table -->
+    <div class="bg-white rounded-2xl shadow overflow-hidden">
+        <table class="w-full">
+            <thead class="bg-choc-700 text-white">
+                <tr>
+                    <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider">ID</th>
+                    <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider">Nombre</th>
+                    <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider">Categoría</th>
+                    <th class="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wider">Precio</th>
+                    <th class="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wider">Stock</th>
+                    <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider">Estado</th>
+                    <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider">Acciones</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-choc-100">
+                <tr th:each="p : ${pageData.content}" class="hover:bg-choc-50 transition-colors">
+                    <td class="px-5 py-4 text-sm text-choc-500" th:text="${p.id}"></td>
+                    <td class="px-5 py-4">
+                        <p class="font-medium text-choc-800" th:text="${p.name}"></p>
+                        <p class="text-xs text-choc-400 mt-0.5 truncate max-w-xs" th:text="${p.description ?: ''}"></p>
+                    </td>
+                    <td class="px-5 py-4">
+                        <span class="px-2.5 py-1 rounded-full text-xs font-medium bg-choc-100 text-choc-700"
+                              th:text="${p.categoryName}"></span>
+                    </td>
+                    <td class="px-5 py-4 text-right font-mono font-semibold text-choc-700"
+                        th:text="'$' + ${#numbers.formatDecimal(p.price, 1, 2)}"></td>
+                    <td class="px-5 py-4 text-right">
+                        <span th:classappend="${p.stock < 10} ? 'text-red-600 font-bold' : 'text-choc-700'"
+                              th:text="${p.stock}"></span>
+                        <span th:if="${p.stock < 10}" class="ml-1 text-xs text-red-500">⚠️</span>
+                    </td>
+                    <td class="px-5 py-4">
+                        <span th:if="${p.active}" class="px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">Activo</span>
+                        <span th:unless="${p.active}" class="px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">Inactivo</span>
+                    </td>
+                    <td class="px-5 py-4 flex gap-2">
+                        <button th:data-id="${p.id}" th:data-name="${p.name}" th:data-desc="${p.description ?: ''}"
+                                th:data-price="${p.price}" th:data-stock="${p.stock}" th:data-cat-id="${p.categoryId}"
+                                onclick="editProduct(this.dataset.id, this.dataset.name, this.dataset.desc, this.dataset.price, this.dataset.stock, this.dataset.catId)"
+                                class="px-3 py-1.5 text-xs bg-gold-400 text-choc-900 rounded-lg hover:bg-gold-500 font-medium transition-colors">Editar</button>
+                        <button th:onclick="'deleteProduct(' + ${p.id} + ')'"
+                                class="px-3 py-1.5 text-xs bg-red-100 text-red-700 rounded-lg hover:bg-red-200 font-medium transition-colors">Eliminar</button>
+                    </td>
+                </tr>
+                <tr th:if="${pageData.empty}">
+                    <td colspan="7" class="px-6 py-10 text-center text-choc-400">No se encontraron productos.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Pagination -->
+        <div class="px-6 py-4 border-t border-choc-100 flex items-center justify-between" th:if="${pageData.totalPages > 1}">
+            <p class="text-sm text-choc-500" th:text="'Página ' + (${pageData.number} + 1) + ' de ' + ${pageData.totalPages}"></p>
+            <div class="flex gap-1">
+                <a th:href="@{/products(page=${pageData.number - 1}, name=${search}, categoryId=${categoryId})}"
+                   th:classappend="${pageData.first} ? 'disabled' : ''" class="page-link">← Anterior</a>
+                <th:block th:each="i : ${#numbers.sequence(0, pageData.totalPages - 1)}">
+                    <a th:href="@{/products(page=${i}, name=${search}, categoryId=${categoryId})}" th:text="${i + 1}"
+                       th:classappend="${i == pageData.number} ? 'active' : ''" class="page-link"></a>
+                </th:block>
+                <a th:href="@{/products(page=${pageData.number + 1}, name=${search}, categoryId=${categoryId})}"
+                   th:classappend="${pageData.last} ? 'disabled' : ''" class="page-link">Siguiente →</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div id="productModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-8 max-h-screen overflow-y-auto">
+        <h2 id="modalTitle" class="text-xl font-bold text-choc-800 mb-6">Nuevo Chocolate</h2>
+        <form onsubmit="saveProduct(event)">
+            <input type="hidden" id="prodId"/>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-choc-700 mb-1">Nombre *</label>
+                <input id="prodName" type="text" required
+                       class="w-full border border-choc-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-choc-400 text-sm"/>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-choc-700 mb-1">Descripción</label>
+                <textarea id="prodDesc" rows="2"
+                          class="w-full border border-choc-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-choc-400 text-sm resize-none"></textarea>
+            </div>
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-sm font-medium text-choc-700 mb-1">Precio *</label>
+                    <input id="prodPrice" type="number" step="0.01" min="0.01" required
+                           class="w-full border border-choc-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-choc-400 text-sm"/>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-choc-700 mb-1">Stock *</label>
+                    <input id="prodStock" type="number" min="0" required
+                           class="w-full border border-choc-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-choc-400 text-sm"/>
+                </div>
+            </div>
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-choc-700 mb-1">Categoría *</label>
+                <select id="prodCategory" required
+                        class="w-full border border-choc-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-choc-400 text-sm bg-white">
+                    <option value="">Seleccionar categoría...</option>
+                    <option th:each="cat : ${categories.content}" th:value="${cat.id}" th:text="${cat.name}"></option>
+                </select>
+            </div>
+            <div class="flex gap-3 justify-end">
+                <button type="button" onclick="closeModal()"
+                        class="px-5 py-2 bg-choc-100 text-choc-700 rounded-lg hover:bg-choc-200 transition-colors font-medium">Cancelar</button>
+                <button type="submit"
+                        class="px-5 py-2 bg-choc-600 text-white rounded-lg hover:bg-choc-700 transition-colors font-medium">Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="toast" class="hidden fixed bottom-6 right-6 px-5 py-3 rounded-xl shadow-lg text-white font-medium text-sm z-50"></div>
+
+<script>
+    function openModal() {
+        document.getElementById('prodId').value = '';
+        ['prodName','prodDesc','prodPrice','prodStock'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('prodCategory').value = '';
+        document.getElementById('modalTitle').textContent = 'Nuevo Chocolate';
+        document.getElementById('productModal').classList.remove('hidden');
+    }
+    function editProduct(id, name, desc, price, stock, catId) {
+        document.getElementById('prodId').value = id;
+        document.getElementById('prodName').value = name;
+        document.getElementById('prodDesc').value = desc;
+        document.getElementById('prodPrice').value = price;
+        document.getElementById('prodStock').value = stock;
+        document.getElementById('prodCategory').value = catId;
+        document.getElementById('modalTitle').textContent = 'Editar Chocolate';
+        document.getElementById('productModal').classList.remove('hidden');
+    }
+    function closeModal() { document.getElementById('productModal').classList.add('hidden'); }
+    async function saveProduct(e) {
+        e.preventDefault();
+        const id = document.getElementById('prodId').value;
+        const body = {
+            name: document.getElementById('prodName').value,
+            description: document.getElementById('prodDesc').value,
+            price: parseFloat(document.getElementById('prodPrice').value),
+            stock: parseInt(document.getElementById('prodStock').value),
+            categoryId: parseInt(document.getElementById('prodCategory').value),
+            active: true
+        };
+        const res = await fetch(id ? `/api/products/${id}` : '/api/products', {
+            method: id ? 'PUT' : 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body)
+        });
+        if (res.ok) { showToast('Producto guardado', 'green'); setTimeout(() => location.reload(), 800); }
+        else { const err = await res.json(); showToast(err.message || 'Error al guardar', 'red'); }
+        closeModal();
+    }
+    async function deleteProduct(id) {
+        if (!confirm('¿Eliminar este producto?')) return;
+        const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
+        if (res.ok) { showToast('Producto eliminado', 'green'); setTimeout(() => location.reload(), 800); }
+        else { const err = await res.json(); showToast(err.message || 'No se pudo eliminar', 'red'); }
+    }
+    function showToast(msg, color) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.className = `fixed bottom-6 right-6 px-5 py-3 rounded-xl shadow-lg text-white font-medium text-sm z-50 bg-${color}-600`;
+        t.classList.remove('hidden');
+        setTimeout(() => t.classList.add('hidden'), 3000);
+    }
+</script>
+</th:block>
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout(~{::title}, ~{::main-content})}">
+<head><title>Dashboard</title></head>
+<body>
+<th:block th:fragment="main-content">
+    <div class="p-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-choc-800">Dashboard</h1>
+            <p class="text-choc-500 mt-1">Bienvenido al sistema de gestión de la Chocolatería del Paraíso</p>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+            <div class="bg-white rounded-2xl shadow p-6 border-l-4 border-choc-500">
+                <p class="text-sm text-choc-400 font-medium uppercase tracking-wide">Categorías</p>
+                <p class="text-4xl font-bold text-choc-700 mt-2" th:text="${totalCategories}">0</p>
+                <a th:href="@{/categories}" class="text-xs text-choc-400 hover:text-choc-600 mt-1 inline-block">Ver todas →</a>
+            </div>
+            <div class="bg-white rounded-2xl shadow p-6 border-l-4 border-gold-400">
+                <p class="text-sm text-choc-400 font-medium uppercase tracking-wide">Chocolates</p>
+                <p class="text-4xl font-bold text-choc-700 mt-2" th:text="${totalProducts}">0</p>
+                <a th:href="@{/products}" class="text-xs text-choc-400 hover:text-choc-600 mt-1 inline-block">Ver todos →</a>
+            </div>
+            <div class="bg-white rounded-2xl shadow p-6 border-l-4 border-choc-300">
+                <p class="text-sm text-choc-400 font-medium uppercase tracking-wide">Clientes</p>
+                <p class="text-4xl font-bold text-choc-700 mt-2" th:text="${totalCustomers}">0</p>
+                <a th:href="@{/customers}" class="text-xs text-choc-400 hover:text-choc-600 mt-1 inline-block">Ver todos →</a>
+            </div>
+            <div class="bg-white rounded-2xl shadow p-6 border-l-4 border-choc-600">
+                <p class="text-sm text-choc-400 font-medium uppercase tracking-wide">Ventas Registradas</p>
+                <p class="text-4xl font-bold text-choc-700 mt-2" th:text="${totalSales}">0</p>
+                <a th:href="@{/sales}" class="text-xs text-choc-400 hover:text-choc-600 mt-1 inline-block">Ver todas →</a>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="bg-white rounded-2xl shadow p-6">
+            <h2 class="text-xl font-semibold text-choc-800 mb-4">Acciones Rápidas</h2>
+            <div class="flex flex-wrap gap-3">
+                <a th:href="@{/sales/new}"
+                   class="px-5 py-3 bg-choc-600 text-white rounded-xl hover:bg-choc-700 transition-colors font-medium flex items-center gap-2">
+                    🛒 Registrar Venta
+                </a>
+                <a th:href="@{/products}"
+                   class="px-5 py-3 bg-choc-100 text-choc-700 rounded-xl hover:bg-choc-200 transition-colors font-medium flex items-center gap-2">
+                    🍫 Gestionar Chocolates
+                </a>
+                <a th:href="@{/customers}"
+                   class="px-5 py-3 bg-choc-100 text-choc-700 rounded-xl hover:bg-choc-200 transition-colors font-medium flex items-center gap-2">
+                    👥 Gestionar Clientes
+                </a>
+                <a href="/h2-console" target="_blank"
+                   class="px-5 py-3 bg-gray-100 text-gray-600 rounded-xl hover:bg-gray-200 transition-colors font-medium flex items-center gap-2">
+                    🗄️ H2 Console
+                </a>
+            </div>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout(~{::title}, ~{::main-content})}">
+<head><title>Ventas</title></head>
+<body>
+<th:block th:fragment="main-content">
+<div class="p-8">
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-3xl font-bold text-choc-800">Historial de Ventas</h1>
+            <p class="text-choc-500 mt-1" th:text="'Total: ' + ${pageData.totalElements} + ' ventas'"></p>
+        </div>
+        <a th:href="@{/sales/new}"
+           class="px-5 py-2.5 bg-choc-600 text-white rounded-xl hover:bg-choc-700 transition-colors font-medium flex items-center gap-2">
+            🛒 Nueva Venta
+        </a>
+    </div>
+
+    <!-- Filter -->
+    <form th:action="@{/sales}" method="get" class="bg-white rounded-2xl shadow p-4 mb-6 flex gap-3">
+        <select name="status" class="border border-choc-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-choc-400 text-sm bg-white text-choc-700">
+            <option value="">Todos los estados</option>
+            <option value="CONFIRMED" th:selected="${status == 'CONFIRMED'}">Confirmada</option>
+            <option value="PENDING"   th:selected="${status == 'PENDING'}">Pendiente</option>
+            <option value="CANCELLED" th:selected="${status == 'CANCELLED'}">Cancelada</option>
+        </select>
+        <button type="submit" class="px-5 py-2 bg-choc-500 text-white rounded-lg hover:bg-choc-600 transition-colors text-sm font-medium">Filtrar</button>
+        <a th:href="@{/sales}" class="px-5 py-2 bg-choc-100 text-choc-700 rounded-lg hover:bg-choc-200 transition-colors text-sm font-medium">Limpiar</a>
+    </form>
+
+    <!-- Table -->
+    <div class="bg-white rounded-2xl shadow overflow-hidden">
+        <table class="w-full">
+            <thead class="bg-choc-700 text-white">
+                <tr>
+                    <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider">#</th>
+                    <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider">Cliente</th>
+                    <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider">Fecha</th>
+                    <th class="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wider">Total</th>
+                    <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider">Estado</th>
+                    <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider">Acciones</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-choc-100">
+                <tr th:each="s : ${pageData.content}" class="hover:bg-choc-50 transition-colors">
+                    <td class="px-5 py-4 text-sm font-mono text-choc-500" th:text="'#' + ${s.id}"></td>
+                    <td class="px-5 py-4 font-medium text-choc-800" th:text="${s.customerName}"></td>
+                    <td class="px-5 py-4 text-sm text-choc-600"
+                        th:text="${#temporals.format(s.saleDate, 'dd/MM/yyyy HH:mm')}"></td>
+                    <td class="px-5 py-4 text-right font-mono font-bold text-choc-700"
+                        th:text="'$' + ${#numbers.formatDecimal(s.total, 1, 2)}"></td>
+                    <td class="px-5 py-4">
+                        <span th:if="${s.status.name() == 'CONFIRMED'}"
+                              class="px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">Confirmada</span>
+                        <span th:if="${s.status.name() == 'PENDING'}"
+                              class="px-2.5 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700">Pendiente</span>
+                        <span th:if="${s.status.name() == 'CANCELLED'}"
+                              class="px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">Cancelada</span>
+                    </td>
+                    <td class="px-5 py-4 flex gap-2">
+                        <a th:href="@{/sales/{id}(id=${s.id})}"
+                           class="px-3 py-1.5 text-xs bg-choc-100 text-choc-700 rounded-lg hover:bg-choc-200 font-medium transition-colors">Ver detalle</a>
+                        <button th:if="${s.status.name() == 'CONFIRMED'}"
+                                th:onclick="'cancelSale(' + ${s.id} + ')'"
+                                class="px-3 py-1.5 text-xs bg-red-100 text-red-700 rounded-lg hover:bg-red-200 font-medium transition-colors">Cancelar</button>
+                    </td>
+                </tr>
+                <tr th:if="${pageData.empty}">
+                    <td colspan="6" class="px-6 py-10 text-center text-choc-400">No se encontraron ventas.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Pagination -->
+        <div class="px-6 py-4 border-t border-choc-100 flex items-center justify-between" th:if="${pageData.totalPages > 1}">
+            <p class="text-sm text-choc-500" th:text="'Página ' + (${pageData.number} + 1) + ' de ' + ${pageData.totalPages}"></p>
+            <div class="flex gap-1">
+                <a th:href="@{/sales(page=${pageData.number - 1}, status=${status})}"
+                   th:classappend="${pageData.first} ? 'disabled' : ''" class="page-link">← Anterior</a>
+                <th:block th:each="i : ${#numbers.sequence(0, pageData.totalPages - 1)}">
+                    <a th:href="@{/sales(page=${i}, status=${status})}" th:text="${i + 1}"
+                       th:classappend="${i == pageData.number} ? 'active' : ''" class="page-link"></a>
+                </th:block>
+                <a th:href="@{/sales(page=${pageData.number + 1}, status=${status})}"
+                   th:classappend="${pageData.last} ? 'disabled' : ''" class="page-link">Siguiente →</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="toast" class="hidden fixed bottom-6 right-6 px-5 py-3 rounded-xl shadow-lg text-white font-medium text-sm z-50"></div>
+
+<script>
+    async function cancelSale(id) {
+        if (!confirm('¿Cancelar esta venta? Se revertirá el stock de los productos.')) return;
+        const res = await fetch(`/api/sales/${id}/cancel`, { method: 'PATCH' });
+        if (res.ok) { showToast('Venta cancelada y stock revertido', 'green'); setTimeout(() => location.reload(), 900); }
+        else { const err = await res.json(); showToast(err.message || 'Error al cancelar', 'red'); }
+    }
+    function showToast(msg, color) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.className = `fixed bottom-6 right-6 px-5 py-3 rounded-xl shadow-lg text-white font-medium text-sm z-50 bg-${color}-600`;
+        t.classList.remove('hidden');
+        setTimeout(() => t.classList.add('hidden'), 3500);
+    }
+</script>
+</th:block>
+</body>
+</html>

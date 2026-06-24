@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout(~{::title}, ~{::main-content})}">
+<head><title>Detalle de Venta</title></head>
+<body>
+<th:block th:fragment="main-content">
+<div class="p-8 max-w-3xl mx-auto">
+    <div class="flex items-center gap-4 mb-6">
+        <a th:href="@{/sales}" class="text-choc-500 hover:text-choc-700 transition-colors">← Volver</a>
+        <h1 class="text-3xl font-bold text-choc-800" th:text="'Venta #' + ${sale.id}"></h1>
+        <span th:if="${sale.status.name() == 'CONFIRMED'}"
+              class="px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-700">Confirmada</span>
+        <span th:if="${sale.status.name() == 'CANCELLED'}"
+              class="px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-700">Cancelada</span>
+        <span th:if="${sale.status.name() == 'PENDING'}"
+              class="px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-700">Pendiente</span>
+    </div>
+
+    <!-- Info header -->
+    <div class="bg-white rounded-2xl shadow p-6 mb-6 grid grid-cols-2 gap-4">
+        <div>
+            <p class="text-xs text-choc-400 uppercase font-semibold tracking-wide mb-1">Cliente</p>
+            <p class="text-choc-800 font-semibold" th:text="${sale.customerName}"></p>
+        </div>
+        <div>
+            <p class="text-xs text-choc-400 uppercase font-semibold tracking-wide mb-1">Fecha y Hora</p>
+            <p class="text-choc-800 font-semibold"
+               th:text="${#temporals.format(sale.saleDate, 'dd/MM/yyyy HH:mm:ss')}"></p>
+        </div>
+        <div th:if="${sale.notes}">
+            <p class="text-xs text-choc-400 uppercase font-semibold tracking-wide mb-1">Notas</p>
+            <p class="text-choc-700" th:text="${sale.notes}"></p>
+        </div>
+    </div>
+
+    <!-- Detail items -->
+    <div class="bg-white rounded-2xl shadow overflow-hidden mb-6">
+        <table class="w-full">
+            <thead class="bg-choc-700 text-white">
+                <tr>
+                    <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider">Producto</th>
+                    <th class="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wider">Precio Unit.</th>
+                    <th class="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wider">Cantidad</th>
+                    <th class="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wider">Subtotal</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-choc-100">
+                <tr th:each="d : ${sale.details}" class="hover:bg-choc-50">
+                    <td class="px-5 py-4 font-medium text-choc-800" th:text="${d.productName}"></td>
+                    <td class="px-5 py-4 text-right text-sm font-mono text-choc-600"
+                        th:text="'$' + ${#numbers.formatDecimal(d.unitPrice, 1, 2)}"></td>
+                    <td class="px-5 py-4 text-right text-sm text-choc-700" th:text="${d.quantity}"></td>
+                    <td class="px-5 py-4 text-right font-mono font-bold text-choc-700"
+                        th:text="'$' + ${#numbers.formatDecimal(d.subtotal, 1, 2)}"></td>
+                </tr>
+            </tbody>
+            <tfoot class="bg-choc-50">
+                <tr>
+                    <td colspan="3" class="px-5 py-4 text-right font-bold text-choc-800 text-lg">TOTAL</td>
+                    <td class="px-5 py-4 text-right font-mono font-bold text-choc-600 text-xl"
+                        th:text="'$' + ${#numbers.formatDecimal(sale.total, 1, 2)}"></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+</th:block>
+</body>
+</html>

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout(~{::title}, ~{::main-content})}">
+<head><title>Clientes</title></head>
+<body>
+<th:block th:fragment="main-content">
+<div class="p-8">
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-3xl font-bold text-choc-800">Clientes</h1>
+            <p class="text-choc-500 mt-1" th:text="'Total: ' + ${pageData.totalElements} + ' clientes'"></p>
+        </div>
+        <button onclick="openModal()"
+                class="px-5 py-2.5 bg-choc-600 text-white rounded-xl hover:bg-choc-700 transition-colors font-medium">
+            + Nuevo Cliente
+        </button>
+    </div>
+
+    <!-- Search -->
+    <form th:action="@{/customers}" method="get" class="bg-white rounded-2xl shadow p-4 mb-6 flex gap-3">
+        <input type="text" name="search" th:value="${search}"
+               placeholder="Buscar por nombre, apellido o email..."
+               class="flex-1 border border-choc-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-choc-400 text-sm"/>
+        <button type="submit"
+                class="px-5 py-2 bg-choc-500 text-white rounded-lg hover:bg-choc-600 transition-colors text-sm font-medium">Buscar</button>
+        <a th:href="@{/customers}"
+           class="px-5 py-2 bg-choc-100 text-choc-700 rounded-lg hover:bg-choc-200 transition-colors text-sm font-medium">Limpiar</a>
+    </form>
+
+    <!-- Table -->
+    <div class="bg-white rounded-2xl shadow overflow-hidden">
+        <table class="w-full">
+            <thead class="bg-choc-700 text-white">
+                <tr>
+                    <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider">ID</th>
+                    <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider">Nombre Completo</th>
+                    <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider">Email</th>
+                    <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider">Teléfono</th>
+                    <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider">Estado</th>
+                    <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider">Acciones</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-choc-100">
+                <tr th:each="c : ${pageData.content}" class="hover:bg-choc-50 transition-colors">
+                    <td class="px-5 py-4 text-sm text-choc-500" th:text="${c.id}"></td>
+                    <td class="px-5 py-4 font-medium text-choc-800" th:text="${c.firstName + ' ' + c.lastName}"></td>
+                    <td class="px-5 py-4 text-sm text-choc-600" th:text="${c.email}"></td>
+                    <td class="px-5 py-4 text-sm text-choc-600" th:text="${c.phone ?: '—'}"></td>
+                    <td class="px-5 py-4">
+                        <span th:if="${c.active}" class="px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">Activo</span>
+                        <span th:unless="${c.active}" class="px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">Inactivo</span>
+                    </td>
+                    <td class="px-5 py-4 flex gap-2">
+                        <button th:data-id="${c.id}" th:data-first="${c.firstName}" th:data-last="${c.lastName}"
+                                th:data-email="${c.email}" th:data-phone="${c.phone ?: ''}" th:data-addr="${c.address ?: ''}"
+                                onclick="editCustomer(this.dataset.id, this.dataset.first, this.dataset.last, this.dataset.email, this.dataset.phone, this.dataset.addr)"
+                                class="px-3 py-1.5 text-xs bg-gold-400 text-choc-900 rounded-lg hover:bg-gold-500 font-medium transition-colors">Editar</button>
+                        <button th:onclick="'deleteCustomer(' + ${c.id} + ')'"
+                                class="px-3 py-1.5 text-xs bg-red-100 text-red-700 rounded-lg hover:bg-red-200 font-medium transition-colors">Eliminar</button>
+                    </td>
+                </tr>
+                <tr th:if="${pageData.empty}">
+                    <td colspan="6" class="px-6 py-10 text-center text-choc-400">No se encontraron clientes.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Pagination -->
+        <div class="px-6 py-4 border-t border-choc-100 flex items-center justify-between" th:if="${pageData.totalPages > 1}">
+            <p class="text-sm text-choc-500" th:text="'Página ' + (${pageData.number} + 1) + ' de ' + ${pageData.totalPages}"></p>
+            <div class="flex gap-1">
+                <a th:href="@{/customers(page=${pageData.number - 1}, search=${search})}"
+                   th:classappend="${pageData.first} ? 'disabled' : ''" class="page-link">← Anterior</a>
+                <th:block th:each="i : ${#numbers.sequence(0, pageData.totalPages - 1)}">
+                    <a th:href="@{/customers(page=${i}, search=${search})}" th:text="${i + 1}"
+                       th:classappend="${i == pageData.number} ? 'active' : ''" class="page-link"></a>
+                </th:block>
+                <a th:href="@{/customers(page=${pageData.number + 1}, search=${search})}"
+                   th:classappend="${pageData.last} ? 'disabled' : ''" class="page-link">Siguiente →</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div id="customerModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-8">
+        <h2 id="modalTitle" class="text-xl font-bold text-choc-800 mb-6">Nuevo Cliente</h2>
+        <form onsubmit="saveCustomer(event)">
+            <input type="hidden" id="custId"/>
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-sm font-medium text-choc-700 mb-1">Nombre *</label>
+                    <input id="custFirst" type="text" required
+                           class="w-full border border-choc-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-choc-400 text-sm"/>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-choc-700 mb-1">Apellido *</label>
+                    <input id="custLast" type="text" required
+                           class="w-full border border-choc-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-choc-400 text-sm"/>
+                </div>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-choc-700 mb-1">Email *</label>
+                <input id="custEmail" type="email" required
+                       class="w-full border border-choc-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-choc-400 text-sm"/>
+            </div>
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-sm font-medium text-choc-700 mb-1">Teléfono</label>
+                    <input id="custPhone" type="text"
+                           class="w-full border border-choc-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-choc-400 text-sm"/>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-choc-700 mb-1">Dirección</label>
+                    <input id="custAddr" type="text"
+                           class="w-full border border-choc-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-choc-400 text-sm"/>
+                </div>
+            </div>
+            <div class="flex gap-3 justify-end mt-6">
+                <button type="button" onclick="closeModal()"
+                        class="px-5 py-2 bg-choc-100 text-choc-700 rounded-lg hover:bg-choc-200 transition-colors font-medium">Cancelar</button>
+                <button type="submit"
+                        class="px-5 py-2 bg-choc-600 text-white rounded-lg hover:bg-choc-700 transition-colors font-medium">Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="toast" class="hidden fixed bottom-6 right-6 px-5 py-3 rounded-xl shadow-lg text-white font-medium text-sm z-50"></div>
+
+<script>
+    function openModal() {
+        document.getElementById('custId').value = '';
+        ['custFirst','custLast','custEmail','custPhone','custAddr'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('modalTitle').textContent = 'Nuevo Cliente';
+        document.getElementById('customerModal').classList.remove('hidden');
+    }
+    function editCustomer(id, first, last, email, phone, addr) {
+        document.getElementById('custId').value = id;
+        document.getElementById('custFirst').value = first;
+        document.getElementById('custLast').value = last;
+        document.getElementById('custEmail').value = email;
+        document.getElementById('custPhone').value = phone;
+        document.getElementById('custAddr').value = addr;
+        document.getElementById('modalTitle').textContent = 'Editar Cliente';
+        document.getElementById('customerModal').classList.remove('hidden');
+    }
+    function closeModal() { document.getElementById('customerModal').classList.add('hidden'); }
+    async function saveCustomer(e) {
+        e.preventDefault();
+        const id = document.getElementById('custId').value;
+        const body = {
+            firstName: document.getElementById('custFirst').value,
+            lastName: document.getElementById('custLast').value,
+            email: document.getElementById('custEmail').value,
+            phone: document.getElementById('custPhone').value,
+            address: document.getElementById('custAddr').value,
+            active: true
+        };
+        const res = await fetch(id ? `/api/customers/${id}` : '/api/customers', {
+            method: id ? 'PUT' : 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body)
+        });
+        if (res.ok) { showToast('Cliente guardado correctamente', 'green'); setTimeout(() => location.reload(), 800); }
+        else { const err = await res.json(); showToast(err.message || 'Error al guardar', 'red'); }
+        closeModal();
+    }
+    async function deleteCustomer(id) {
+        if (!confirm('¿Eliminar este cliente?')) return;
+        const res = await fetch(`/api/customers/${id}`, { method: 'DELETE' });
+        if (res.ok) { showToast('Cliente eliminado', 'green'); setTimeout(() => location.reload(), 800); }
+        else { const err = await res.json(); showToast(err.message || 'No se pudo eliminar', 'red'); }
+    }
+    function showToast(msg, color) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.className = `fixed bottom-6 right-6 px-5 py-3 rounded-xl shadow-lg text-white font-medium text-sm z-50 bg-${color}-600`;
+        t.classList.remove('hidden');
+        setTimeout(() => t.classList.add('hidden'), 3000);
+    }
+</script>
+</th:block>
+</body>
+</html>

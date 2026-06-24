@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout(~{::title}, ~{::main-content})}">
+<head><title>Categorías</title></head>
+<body>
+<th:block th:fragment="main-content">
+<div class="p-8">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-3xl font-bold text-choc-800">Categorías</h1>
+            <p class="text-choc-500 mt-1" th:text="'Total: ' + ${pageData.totalElements} + ' categorías'"></p>
+        </div>
+        <button onclick="openModal()"
+                class="px-5 py-2.5 bg-choc-600 text-white rounded-xl hover:bg-choc-700 transition-colors font-medium flex items-center gap-2">
+            + Nueva Categoría
+        </button>
+    </div>
+
+    <!-- Search -->
+    <form th:action="@{/categories}" method="get" class="bg-white rounded-2xl shadow p-4 mb-6 flex gap-3">
+        <input type="text" name="name" th:value="${search}"
+               placeholder="Buscar por nombre..."
+               class="flex-1 border border-choc-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-choc-400 text-sm"/>
+        <button type="submit"
+                class="px-5 py-2 bg-choc-500 text-white rounded-lg hover:bg-choc-600 transition-colors text-sm font-medium">
+            Buscar
+        </button>
+        <a th:href="@{/categories}"
+           class="px-5 py-2 bg-choc-100 text-choc-700 rounded-lg hover:bg-choc-200 transition-colors text-sm font-medium">
+            Limpiar
+        </a>
+    </form>
+
+    <!-- Table -->
+    <div class="bg-white rounded-2xl shadow overflow-hidden">
+        <table class="w-full">
+            <thead class="bg-choc-700 text-white">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">ID</th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">Nombre</th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">Descripción</th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">Estado</th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">Acciones</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-choc-100">
+                <tr th:each="cat : ${pageData.content}" class="hover:bg-choc-50 transition-colors">
+                    <td class="px-6 py-4 text-sm text-choc-500" th:text="${cat.id}"></td>
+                    <td class="px-6 py-4 font-medium text-choc-800" th:text="${cat.name}"></td>
+                    <td class="px-6 py-4 text-sm text-choc-600" th:text="${cat.description ?: '—'}"></td>
+                    <td class="px-6 py-4">
+                        <span th:if="${cat.active}"
+                              class="px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">Activa</span>
+                        <span th:unless="${cat.active}"
+                              class="px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">Inactiva</span>
+                    </td>
+                    <td class="px-6 py-4 flex gap-2">
+                        <button th:data-id="${cat.id}" th:data-name="${cat.name}" th:data-desc="${cat.description ?: ''}"
+                                onclick="editCategory(this.dataset.id, this.dataset.name, this.dataset.desc)"
+                                class="px-3 py-1.5 text-xs bg-gold-400 text-choc-900 rounded-lg hover:bg-gold-500 font-medium transition-colors">
+                            Editar
+                        </button>
+                        <button th:onclick="'deleteCategory(' + ${cat.id} + ')'"
+                                class="px-3 py-1.5 text-xs bg-red-100 text-red-700 rounded-lg hover:bg-red-200 font-medium transition-colors">
+                            Eliminar
+                        </button>
+                    </td>
+                </tr>
+                <tr th:if="${pageData.empty}">
+                    <td colspan="5" class="px-6 py-10 text-center text-choc-400">
+                        No se encontraron categorías.
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Pagination -->
+        <div class="px-6 py-4 border-t border-choc-100 flex items-center justify-between" th:if="${pageData.totalPages > 1}">
+            <p class="text-sm text-choc-500"
+               th:text="'Página ' + (${pageData.number} + 1) + ' de ' + ${pageData.totalPages}"></p>
+            <div class="flex gap-1">
+                <a th:href="@{/categories(page=${pageData.number - 1}, name=${search})}"
+                   th:classappend="${pageData.first} ? 'disabled' : ''"
+                   class="page-link">← Anterior</a>
+                <th:block th:each="i : ${#numbers.sequence(0, pageData.totalPages - 1)}">
+                    <a th:href="@{/categories(page=${i}, name=${search})}"
+                       th:text="${i + 1}"
+                       th:classappend="${i == pageData.number} ? 'active' : ''"
+                       class="page-link"></a>
+                </th:block>
+                <a th:href="@{/categories(page=${pageData.number + 1}, name=${search})}"
+                   th:classappend="${pageData.last} ? 'disabled' : ''"
+                   class="page-link">Siguiente →</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div id="categoryModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
+        <h2 id="modalTitle" class="text-xl font-bold text-choc-800 mb-6">Nueva Categoría</h2>
+        <form id="categoryForm" onsubmit="saveCategory(event)">
+            <input type="hidden" id="catId"/>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-choc-700 mb-1">Nombre *</label>
+                <input id="catName" type="text" required
+                       class="w-full border border-choc-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-choc-400"/>
+            </div>
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-choc-700 mb-1">Descripción</label>
+                <textarea id="catDesc" rows="3"
+                          class="w-full border border-choc-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-choc-400 resize-none"></textarea>
+            </div>
+            <div class="flex gap-3 justify-end">
+                <button type="button" onclick="closeModal()"
+                        class="px-5 py-2 bg-choc-100 text-choc-700 rounded-lg hover:bg-choc-200 transition-colors font-medium">
+                    Cancelar
+                </button>
+                <button type="submit"
+                        class="px-5 py-2 bg-choc-600 text-white rounded-lg hover:bg-choc-700 transition-colors font-medium">
+                    Guardar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="hidden fixed bottom-6 right-6 px-5 py-3 rounded-xl shadow-lg text-white font-medium text-sm z-50 transition-all"></div>
+
+<script>
+    function openModal() {
+        document.getElementById('catId').value = '';
+        document.getElementById('catName').value = '';
+        document.getElementById('catDesc').value = '';
+        document.getElementById('modalTitle').textContent = 'Nueva Categoría';
+        document.getElementById('categoryModal').classList.remove('hidden');
+    }
+    function editCategory(id, name, desc) {
+        document.getElementById('catId').value = id;
+        document.getElementById('catName').value = name;
+        document.getElementById('catDesc').value = desc;
+        document.getElementById('modalTitle').textContent = 'Editar Categoría';
+        document.getElementById('categoryModal').classList.remove('hidden');
+    }
+    function closeModal() {
+        document.getElementById('categoryModal').classList.add('hidden');
+    }
+    async function saveCategory(e) {
+        e.preventDefault();
+        const id = document.getElementById('catId').value;
+        const body = {
+            name: document.getElementById('catName').value,
+            description: document.getElementById('catDesc').value,
+            active: true
+        };
+        const url = id ? `/api/categories/${id}` : '/api/categories';
+        const method = id ? 'PUT' : 'POST';
+        const res = await fetch(url, {
+            method, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)
+        });
+        if (res.ok) { showToast('Categoría guardada correctamente', 'green'); setTimeout(() => location.reload(), 800); }
+        else { const err = await res.json(); showToast(err.message || 'Error al guardar', 'red'); }
+        closeModal();
+    }
+    async function deleteCategory(id) {
+        if (!confirm('¿Eliminar esta categoría?')) return;
+        const res = await fetch(`/api/categories/${id}`, { method: 'DELETE' });
+        if (res.ok) { showToast('Categoría eliminada', 'green'); setTimeout(() => location.reload(), 800); }
+        else { const err = await res.json(); showToast(err.message || 'No se pudo eliminar', 'red'); }
+    }
+    function showToast(msg, color) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.className = `fixed bottom-6 right-6 px-5 py-3 rounded-xl shadow-lg text-white font-medium text-sm z-50 bg-${color}-600`;
+        t.classList.remove('hidden');
+        setTimeout(() => t.classList.add('hidden'), 3000);
+    }
+</script>
+</th:block>
+</body>
+</html>

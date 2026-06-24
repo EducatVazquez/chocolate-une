@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      th:fragment="layout(title, content)">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title} + ' – Chocolatería del Paraíso'">Chocolatería del Paraíso</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        choc: {
+                            50:  '#fdf8f0',
+                            100: '#f7e8cc',
+                            200: '#edcf99',
+                            300: '#dea95e',
+                            400: '#c8832f',
+                            500: '#a0621e',
+                            600: '#7c4a14',
+                            700: '#5e3610',
+                            800: '#3d220a',
+                            900: '#1e1005',
+                        },
+                        gold: {
+                            400: '#d4a853',
+                            500: '#b8892e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .page-link { @apply px-3 py-1 rounded border border-choc-200 text-choc-700 hover:bg-choc-100 transition-colors text-sm; }
+        .page-link.active { @apply bg-choc-600 text-white border-choc-600; }
+        .page-link.disabled { @apply opacity-40 cursor-not-allowed pointer-events-none; }
+    </style>
+</head>
+<body class="bg-choc-50 text-choc-900 min-h-screen">
+
+    <!-- Sidebar -->
+    <div class="flex min-h-screen">
+        <aside class="w-64 bg-choc-800 text-choc-100 flex flex-col shadow-xl flex-shrink-0">
+            <!-- Logo -->
+            <div class="px-6 py-6 border-b border-choc-700">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-gold-400 rounded-full flex items-center justify-center text-choc-900 font-bold text-xl">🍫</div>
+                    <div>
+                        <p class="font-bold text-white text-sm leading-tight">Chocolatería</p>
+                        <p class="text-choc-300 text-xs">del Paraíso</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Nav -->
+            <nav class="flex-1 px-4 py-6 space-y-1">
+                <a th:href="@{/dashboard}"
+                   th:classappend="${requestURI == '/' or requestURI == '/dashboard'} ? 'bg-choc-700 text-white' : 'text-choc-300 hover:bg-choc-700 hover:text-white'"
+                   class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-sm font-medium">
+                    <span>📊</span> Dashboard
+                </a>
+                <a th:href="@{/categories}"
+                   th:classappend="${#strings.startsWith(requestURI, '/categories')} ? 'bg-choc-700 text-white' : 'text-choc-300 hover:bg-choc-700 hover:text-white'"
+                   class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-sm font-medium">
+                    <span>🏷️</span> Categorías
+                </a>
+                <a th:href="@{/products}"
+                   th:classappend="${#strings.startsWith(requestURI, '/products')} ? 'bg-choc-700 text-white' : 'text-choc-300 hover:bg-choc-700 hover:text-white'"
+                   class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-sm font-medium">
+                    <span>🍫</span> Chocolates
+                </a>
+                <a th:href="@{/customers}"
+                   th:classappend="${#strings.startsWith(requestURI, '/customers')} ? 'bg-choc-700 text-white' : 'text-choc-300 hover:bg-choc-700 hover:text-white'"
+                   class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-sm font-medium">
+                    <span>👥</span> Clientes
+                </a>
+                <a th:href="@{/sales}"
+                   th:classappend="${#strings.startsWith(requestURI, '/sales')} ? 'bg-choc-700 text-white' : 'text-choc-300 hover:bg-choc-700 hover:text-white'"
+                   class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-sm font-medium">
+                    <span>📋</span> Ventas
+                </a>
+                <a th:href="@{/sales/new}"
+                   class="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-sm font-medium mt-4 bg-gold-400 text-choc-900 hover:bg-gold-500 font-semibold">
+                    <span>🛒</span> Nueva Venta
+                </a>
+            </nav>
+
+            <div class="px-6 py-4 border-t border-choc-700 text-choc-400 text-xs">
+                <p>Sistema de Gestión v1.0</p>
+            </div>
+        </aside>
+
+        <!-- Main content -->
+        <main class="flex-1 overflow-auto">
+            <div th:replace="${content}"></div>
+        </main>
+    </div>
+
+</body>
+</html>
